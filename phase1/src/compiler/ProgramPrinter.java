@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 public class ProgramPrinter implements ToorlaListener {
     String identation = "    ";
     int count = 0;
+    String rule = "1";
     void print() {
         for (int i = 0; i < count; i++) {
             System.out.print(identation);
@@ -155,6 +156,7 @@ public class ProgramPrinter implements ToorlaListener {
         } else if (!method.equals("main")) {
             System.out.println("parameter list: []");
         }
+//        System.out.println(ctx.s.children.get(0).getText());
 //        count++;
     }
 
@@ -169,12 +171,30 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterClosedStatement(ToorlaParser.ClosedStatementContext ctx) {
-//        System.out.println(ctx.s7 != null ? ctx.s7.children : null);
-//        if (ctx.s7 != null) {
-//            System.out.println(identation + identation + identation +"field: " + ctx.s7.children.get(1)
-//                    + " / type: local var");
-//        }
+//        System.out.println(ctx.s7 != null ? ctx.s7.children : null)
+//        System.out.println(ctx.);
+//        System.out.println(ctx.s7.parent.getText());
+//        String block = "";
+        if (ctx.s1 != null) {
+            rule = ctx.s1.getText();
+        }
+
+        if (ctx.s7 != null) {
+//            if (rule.contains(ctx.s7.getText())) {
+//
+//                System.out.println();
+//                count++;
+//                print();
+//                System.out.println("nested {");
+////                count--;
+//            }
+            System.out.println();
+            print();
+            System.out.println("field: " + ctx.s7.children.get(1)
+                    + " / type: local var");
+        }
 //        System.out.println(ctx.s5 != null ? ctx.s5.children.get(2).getText() : "");
+//        System.out.println();
         print();
         if (ctx.s5 != null) {
             String variableName = ctx.s5.left.getText();
@@ -185,6 +205,8 @@ public class ProgramPrinter implements ToorlaListener {
                         newOperatorVariablesType.contains("string") ||
                         newOperatorVariablesType.contains("bool")) {
                     newOperatorVariablesType = newOperatorVariablesType.replaceAll("[0-9]+", "");
+                    System.out.println();
+                    print();
                     System.out.println("field: " + variableName + " / type: " + newOperatorVariablesType);
                 }
             }
@@ -194,12 +216,11 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void exitClosedStatement(ToorlaParser.ClosedStatementContext ctx) {
-//        System.out.println(ctx.getText());
+//        count--;
     }
 
     @Override
     public void enterClosedConditional(ToorlaParser.ClosedConditionalContext ctx) {
-//        System.out.println(ctx.getText());
     }
 
     @Override
@@ -209,7 +230,7 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterOpenConditional(ToorlaParser.OpenConditionalContext ctx) {
-//        System.out.println(ctx.);
+//        System.out.println(ctx.getText());
     }
 
     @Override
@@ -219,7 +240,7 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterOpenStatement(ToorlaParser.OpenStatementContext ctx) {
-//        System.out.println(ctx.);
+//        System.out.println(ctx.getText());
     }
 
     @Override
@@ -229,7 +250,7 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterStatement(ToorlaParser.StatementContext ctx) {
-//        System.out.println(ctx.);
+//        System.out.println(ctx.s);
     }
 
     @Override
@@ -253,33 +274,36 @@ public class ProgramPrinter implements ToorlaListener {
     public void enterStatementBlock(ToorlaParser.StatementBlockContext ctx) {
 
 //        System.out.println(ctx.getText());
-        String statement = ctx.getText();
-        System.out.println();
-//        System.out.println(statement);
-//        System.out.println(ctx.children.get(0));
+//        String statement = ctx.getText();
+//        System.out.println();
+////        System.out.println(statement);
+////        System.out.println(ctx.children.get(0));
         String begin = ctx.children.get(0).getText();
 //        System.out.println(begin);
         if (begin.equals("begin")) {
-            System.out.println(identation + identation + identation + identation + "nested {");
+            System.out.println();
+            print();
+            System.out.println("nested {");
         }
         count++;
+//        count++;
+//        print();
 ////        System.out.println(ctx.children.get(1).getText());
 //        String statementBlock = ctx.children.get(1).getText();
 ////        System.out.println(statementBlock.indexOf("="));
 //        int index = statementBlock.indexOf("=");
 //        if (index >= 0) {
 //            String paramName = statementBlock.substring(3, index);
-//            System.out.println(identation + "field: " + paramName + " / type: local var");
+//            System.out.println("field: " + paramName + " / type: local var");
 //        }
     }
 
     @Override
     public void exitStatementBlock(ToorlaParser.StatementBlockContext ctx) {
-//        System.out.println(identation + identation + identation + identation + "}");
-
+        count--;
         System.out.println();
         print();
-        count--;
+//        count--;
         System.out.println("}");
     }
 
