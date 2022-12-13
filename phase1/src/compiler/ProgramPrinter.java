@@ -4,29 +4,40 @@ import gen.ToorlaListener;
 import gen.ToorlaParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class ProgramPrinter implements ToorlaListener {
     String identation = "    ";
+    int count = 0;
+    void print() {
+        for (int i = 0; i < count; i++) {
+            System.out.print(identation);
+        }
+    }
     @Override
     public void enterProgram(ToorlaParser.ProgramContext ctx) {
         System.out.println("program start {");
+        count++;
     }
 
     @Override
     public void exitProgram(ToorlaParser.ProgramContext ctx) {
         System.out.println("}");
+        count--;
+        System.out.println(count);
     }
 
     @Override
     public void enterClassDeclaration(ToorlaParser.ClassDeclarationContext ctx) {
-
+//        count--;
         String parentChecking = ctx.parent.getText();
         parentChecking = parentChecking.substring(0, 5);
         if (!parentChecking.equalsIgnoreCase("entry")) {
 //            System.out.println("it is entry");
             if (ctx.classParent == null) {
-                System.out.println(identation + "class: " + ctx.className.getText() + " / class parent: " +
+                print();
+                System.out.println("class: " + ctx.className.getText() + " / class parent: " +
                         "none" + " / isEntry: false {");
             }
             else {
@@ -35,50 +46,59 @@ public class ProgramPrinter implements ToorlaListener {
             }
         }
 
-
+        count++;
 
     }
 
     @Override
     public void exitClassDeclaration(ToorlaParser.ClassDeclarationContext ctx) {
+        count--;
 
         String parentCheckingInExit = ctx.parent.getText();
         parentCheckingInExit = parentCheckingInExit.substring(0, 5);
         if (!parentCheckingInExit.equalsIgnoreCase("entry")) {
-            System.out.println(identation + "}");
+            print();
+            System.out.println("}");
         }
-//        System.out.println("}");
     }
 
     @Override
     public void enterEntryClassDeclaration(ToorlaParser.EntryClassDeclarationContext ctx) {
-//        System.out.println(ctx.getRuleIndex());
-//        String classParent;
+
+        print();
         if (ctx.classDeclaration().classParent == null) {
-            System.out.println(identation + "class: " + ctx.classDeclaration().className.getText() + " / class parent: "
+
+            System.out.println("class: " + ctx.classDeclaration().className.getText() + " / class parent: "
                 + "none" +" / isEntry: true {");
         }
         else {
-            System.out.println(identation + "class: " + ctx.classDeclaration().className.getText() + " / class parent: "
+
+            System.out.println("class: " + ctx.classDeclaration().className.getText() + " / class parent: "
                 + ctx.classDeclaration().classParent.getText() + " / isEntry: true {");
         }
 
+        count++;
     }
 
     @Override
     public void exitEntryClassDeclaration(ToorlaParser.EntryClassDeclarationContext ctx) {
-        System.out.println(identation + "}");
+//        count--;
+        print();
+        System.out.println("}");
+
     }
 
     @Override
     public void enterFieldDeclaration(ToorlaParser.FieldDeclarationContext ctx) {
-        System.out.println(identation + identation + "field: " + ctx.fieldName.getText() +
-                " / type: " + ctx.fieldType.getText());
+        print();
+        System.out.println("field: " + ctx.fieldName.getText() + " / type: " + ctx.fieldType.getText());
+        count++;
     }
 
     @Override
     public void exitFieldDeclaration(ToorlaParser.FieldDeclarationContext ctx) {
 
+        count--;
     }
 
     @Override
@@ -98,43 +118,53 @@ public class ProgramPrinter implements ToorlaListener {
 //        System.out.println(ctx.t.getText()); // return type of methods
 //        System.out.println(ctx.param1); // check whether it is null or not
 //        System.out.println(ctx.methodAccessModifier); // if it is null, we should expect that it is public
-//        System.out.println(ctx.param1);
-//        System.out.println(identation +  identation + "1");
         String className = ctx.parent.getChild(1).getText();
         String method = ctx.methodName.getText();
         String returnType = ctx.t.getText();
         String access = ctx.methodAccessModifier == null ? "public" : ctx.methodAccessModifier.getText();
-        if(method.equals(className)) {
-            System.out.println(identation + identation + "class constructor: " + className + " / return type: "
-                    + returnType + "/ type: " + access + "{");
-        } else if (method.equals("main")) {
-            System.out.println(identation + identation + method + " method / type: " + returnType + "{");
-        } else {
-            System.out.println(identation + identation + "class method: " + method + " / return type: "
-                    + returnType + "/ type: " + access + "{");
+        if (!method.equals("main")) {
+            print();
         }
 
+        if(method.equals(className)) {
+
+            System.out.println("class constructor: " + className + " / return type: "
+                    + returnType + "/ type: " + access + "{");
+        } else if (method.equals("main")) {
+            count--;
+            print();
+            System.out.println(method + " method / type: " + returnType + "{");
+        } else {
+            System.out.println("class method: " + method + " / return type: "
+                    + returnType + "/ type: " + access + "{");
+        }
+        count++;
+        print();
         if (ctx.param1 != null) {
             String parameterName1 = ctx.param1.getText();
             String paramType1 = ctx.typeP1.getText();
             if (ctx.param2 != null) {
                 String parameterName2 = ctx.param2.getText();
                 String paramType2 = ctx.typeP2.getText();
-                System.out.println(identation + identation + identation + "parameter list: [type: " + paramType1 + " / name: "
+                System.out.println("parameter list: [type: " + paramType1 + " / name: "
                         + parameterName1 + ", type: " + paramType2 + " / name: " + parameterName2 + "]");
             }
             else {
-                System.out.println(identation + identation + identation + "parameter list: [type: " + paramType1 + " / name: "+ parameterName1 + "]");
+                System.out.println("parameter list: [type: " + paramType1 + " / name: "+ parameterName1 + "]");
             }
         } else if (!method.equals("main")) {
-            System.out.println(identation + identation + identation + "parameter list: []");
+            System.out.println("parameter list: []");
         }
-
+//        count++;
     }
 
     @Override
     public void exitMethodDeclaration(ToorlaParser.MethodDeclarationContext ctx) {
-        System.out.println(identation + identation + "}");
+        System.out.println();
+        count--;
+//        count--;
+        print();
+        System.out.println("}");
     }
 
     @Override
@@ -145,6 +175,7 @@ public class ProgramPrinter implements ToorlaListener {
 //                    + " / type: local var");
 //        }
 //        System.out.println(ctx.s5 != null ? ctx.s5.children.get(2).getText() : "");
+        print();
         if (ctx.s5 != null) {
             String variableName = ctx.s5.left.getText();
             if (ctx.s5.right.getText().contains("new")) {
@@ -154,11 +185,11 @@ public class ProgramPrinter implements ToorlaListener {
                         newOperatorVariablesType.contains("string") ||
                         newOperatorVariablesType.contains("bool")) {
                     newOperatorVariablesType = newOperatorVariablesType.replaceAll("[0-9]+", "");
-                    System.out.println(identation + identation + identation +"field: "
-                            + variableName + " / type: " + newOperatorVariablesType);
+                    System.out.println("field: " + variableName + " / type: " + newOperatorVariablesType);
                 }
             }
         }
+//        count++;
     }
 
     @Override
@@ -209,7 +240,7 @@ public class ProgramPrinter implements ToorlaListener {
     @Override
     public void enterStatementVarDef(ToorlaParser.StatementVarDefContext ctx) {
 //        System.out.println(ctx.i1.getText());
-        System.out.println(ctx.parent.getText());
+//        System.out.println(ctx.parent.getText());
 //        System.out.println(identation + identation + identation + "field: " + ctx.i1.getText() + " / type: local var");
     }
 
@@ -220,9 +251,18 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterStatementBlock(ToorlaParser.StatementBlockContext ctx) {
+
 //        System.out.println(ctx.getText());
-//        System.out.println(ctx.children);
-//        System.out.println("nested {");
+        String statement = ctx.getText();
+        System.out.println();
+//        System.out.println(statement);
+//        System.out.println(ctx.children.get(0));
+        String begin = ctx.children.get(0).getText();
+//        System.out.println(begin);
+        if (begin.equals("begin")) {
+            System.out.println(identation + identation + identation + identation + "nested {");
+        }
+        count++;
 ////        System.out.println(ctx.children.get(1).getText());
 //        String statementBlock = ctx.children.get(1).getText();
 ////        System.out.println(statementBlock.indexOf("="));
@@ -235,6 +275,11 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void exitStatementBlock(ToorlaParser.StatementBlockContext ctx) {
+//        System.out.println(identation + identation + identation + identation + "}");
+
+        System.out.println();
+        print();
+        count--;
         System.out.println("}");
     }
 
