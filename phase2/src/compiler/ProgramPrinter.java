@@ -6,20 +6,44 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import java.util.List;
+import java.util.Vector;
+
 public class ProgramPrinter implements ToorlaListener {
+
+    Vector<Object> tables = new Vector<Object>();
     @Override
     public void enterProgram(ToorlaParser.ProgramContext ctx) {
-        System.out.println("Hello Program {" + ctx.depth());
+        SymbolTable program = new SymbolTable();
+        String className = ctx.classDeclaration().get(0).className.getText();
+        String mainClass = (ctx.mainclass != null) ? ctx.mainclass.classDeclaration().className
+                .getText() : "";
+        String parentClass = (ctx.classDeclaration().get(0).classParent != null) ?
+                ctx.classDeclaration().get(0).classParent.getText() : "[]";
+        String parentMainClass = (ctx.mainclass.classDeclaration().classParent != null) ?
+                ctx.mainclass.classDeclaration().classParent.getText() : "[]";
+//        System.out.println(parentClass);
+        String key_class = "Class_" + className;
+        String value_class = "Class (name: " + className + ") (parent: " + parentClass +
+                ") (isEntry: False)";
+        program.setNameAndScopeNumber("Program", 1);
+        program.makeHashTable(key_class, value_class);
+//        System.out.println(mainClass);
+        String keyMainClass = "Class_" + mainClass;
+        String valueMainClass = "Class (name: " + mainClass + ") (parent: " + parentMainClass + ") (isEntry: True)";
+        program.makeHashTable(keyMainClass, valueMainClass);
+        System.out.println(program);
+//        System.out.println(ctx.classDeclaration().get(0).className.getText());
     }
 
     @Override
     public void exitProgram(ToorlaParser.ProgramContext ctx) {
-        System.out.println("goodbye Program }");
+//        System.out.println("goodbye Program }");
     }
 
     @Override
     public void enterClassDeclaration(ToorlaParser.ClassDeclarationContext ctx) {
-        System.out.println("class: " + ctx.className.getText() + " line: " + ctx.className.getLine());
+//        System.out.println("class: " + ctx.className.getText() + " line: " + ctx.className.getLine());
     }
 
     @Override
