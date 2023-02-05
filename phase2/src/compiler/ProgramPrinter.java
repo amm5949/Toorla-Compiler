@@ -103,7 +103,31 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterEntryClassDeclaration(ToorlaParser.EntryClassDeclarationContext ctx) {
-        
+        SymbolTable entryClassCriteria = new SymbolTable();
+        String key;
+        String value;
+        int entryClassLine = ctx.classDeclaration().className.getLine();
+        entryClassCriteria.setNameAndScopeNumber(this.entryClass, entryClassLine);
+
+        for (ToorlaParser.MethodDeclarationContext method : ctx.classDeclaration().
+                methodDeclaration()) {
+            String methodName = method.methodName.getText();
+            String parameter1 = (method.param1 != null) ? method.param1.getText() : "";
+            String parameterType1 = (method.typeP1 != null) ? method.typeP1.getText() : "";
+            String parameter2 = (method.param2 != null) ? method.param2.getText() : "";
+            String parameterType2 = (method.typeP2 != null) ? method.typeP2.getText() : "";
+            String returnType = method.t.getText();
+            key = "Method_" + methodName;
+            value = "Method (name: " + methodName + ") (return type: [" + returnType + "]) " +
+                    "(parameter list: " + ((!parameter1.equals("")) ? "[name: " + parameter1 +
+                    ", type: " + parameterType1 + ", index: 1]" + ((!parameter2.equals("")) ?
+                    ", [name: " + parameter2 + ", type: " + parameterType2 + ", index: 2]" : "")
+                    : "[]") + ")";
+
+            entryClassCriteria.makeHashTable(key, value);
+        }
+        System.out.println(entryClassCriteria);
+        tables.add(entryClassCriteria);
     }
 
     @Override
