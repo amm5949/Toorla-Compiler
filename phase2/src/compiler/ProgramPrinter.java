@@ -6,18 +6,20 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.List;
+
 import java.util.Vector;
 
 public class ProgramPrinter implements ToorlaListener {
 
-    Vector<Object> tables = new Vector<Object>();
+    Vector<Object> tables = new Vector<>();
+    String entryClass = "";
     @Override
     public void enterProgram(ToorlaParser.ProgramContext ctx) {
         SymbolTable program = new SymbolTable();
         String className = ctx.classDeclaration().get(0).className.getText();
         String mainClass = (ctx.mainclass != null) ? ctx.mainclass.classDeclaration().className
                 .getText() : "";
+        entryClass = mainClass;
         String parentClass = (ctx.classDeclaration().get(0).classParent != null) ?
                 ctx.classDeclaration().get(0).classParent.getText() : "[]";
         String parentMainClass = (ctx.mainclass.classDeclaration().classParent != null) ?
@@ -33,6 +35,7 @@ public class ProgramPrinter implements ToorlaListener {
         String valueMainClass = "Class (name: " + mainClass + ") (parent: " + parentMainClass + ") (isEntry: True)";
         program.makeHashTable(keyMainClass, valueMainClass);
         System.out.println(program);
+        tables.add(program);
 //        System.out.println(ctx.classDeclaration().get(0).className.getText());
     }
 
@@ -43,7 +46,54 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterClassDeclaration(ToorlaParser.ClassDeclarationContext ctx) {
-//        System.out.println("class: " + ctx.className.getText() + " line: " + ctx.className.getLine());
+
+        SymbolTable classCriteria = new SymbolTable();
+        if (!ctx.className.getText().equals(this.entryClass)) {
+            String className = ctx.className.getText();
+            int line = ctx.className.getLine();
+            classCriteria.setNameAndScopeNumber(className, line);
+        }
+
+        String key;
+        String value;
+
+        for (ToorlaParser.MethodDeclarationContext method : ctx.methodDeclaration()) {
+            String parameter1 = (method.param1 != null) ? method.param1.getText() : "";
+            String parameterType1 = (method.typeP1 != null) ? method.typeP1.getText() : "";
+            String parameter2 = (method.param2 != null) ? method.param2.getText() : "";
+            String parameterType2 = (method.typeP2 != null) ? method.typeP2.getText() : "";
+            String returnType = method.t.getText();
+            String parentClass = method.parent.getChild(1).getText();
+            String methodName = method.methodName.getText();
+            boolean isConstructor;
+
+            if (!parentClass.equals(this.entryClass)) {
+                isConstructor = methodName.equals(parentClass);
+                String type = (isConstructor) ? "Constructor" : "Method";
+                key = type + "_" + methodName;
+                value = type + " (name : " + methodName + ") (return type: [" + returnType + "]) " +
+                        "(parameter list: " + ((!parameter1.equals("")) ? "[name: " + parameter1 +
+                        ", type: " + parameterType1 + ", index: 1]" + ((!parameter2.equals("")) ?
+                        ", [name: " + parameter2 + ", type: " + parameterType2 + ", index: 2]" : "")
+                        : "[]") + ")";
+                classCriteria.makeHashTable(key, value);
+            }
+        }
+        for (ToorlaParser.FieldDeclarationContext field : ctx.fieldDeclaration()) {
+            String fieldName = (field.fieldName != null) ? field.fieldName.getText() : "";
+            String fieldType = (field.fieldType != null) ? field.fieldType.getText() : "";
+            key = "Field_" + fieldName;
+            value = "ClassField (name: " + fieldName + ")" +
+                    " (type: " + fieldType + " isDefined: " +
+                    ((!fieldName.equals("") || !fieldType.equals("")) ? "True)" : "False)");
+            classCriteria.makeHashTable(key, value);
+        }
+        if (!ctx.className.getText().equals(this.entryClass)) {
+            System.out.println(classCriteria);
+        }
+
+//        System.out.println(ctx.fieldDeclaration().iterator().next().fieldName.getText());
+        tables.add(classCriteria);
     }
 
     @Override
@@ -53,7 +103,7 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterEntryClassDeclaration(ToorlaParser.EntryClassDeclarationContext ctx) {
-
+        
     }
 
     @Override
