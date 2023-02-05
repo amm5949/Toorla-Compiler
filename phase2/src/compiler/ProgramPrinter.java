@@ -9,17 +9,17 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 public class ProgramPrinter implements ToorlaListener {
     @Override
     public void enterProgram(ToorlaParser.ProgramContext ctx) {
-
+        System.out.println("Hello Program {" + ctx.depth());
     }
 
     @Override
     public void exitProgram(ToorlaParser.ProgramContext ctx) {
-
+        System.out.println("goodbye Program }");
     }
 
     @Override
     public void enterClassDeclaration(ToorlaParser.ClassDeclarationContext ctx) {
-
+        System.out.println("class: " + ctx.className.getText() + " line: " + ctx.className.getLine());
     }
 
     @Override
