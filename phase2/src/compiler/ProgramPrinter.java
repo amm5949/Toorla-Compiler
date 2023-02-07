@@ -3,6 +3,7 @@ package compiler;
 import gen.ToorlaListener;
 import gen.ToorlaParser;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -32,7 +33,8 @@ public class ProgramPrinter implements ToorlaListener {
         program.makeHashTable(key_class, value_class);
 //        System.out.println(mainClass);
         String keyMainClass = "Class_" + mainClass;
-        String valueMainClass = "Class (name: " + mainClass + ") (parent: " + parentMainClass + ") (isEntry: True)";
+        String valueMainClass = "Class (name: " + mainClass + ") " +
+                "(parent: " + parentMainClass + ") (isEntry: True)";
         program.makeHashTable(keyMainClass, valueMainClass);
         System.out.println(program);
         tables.add(program);
@@ -157,7 +159,108 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterMethodDeclaration(ToorlaParser.MethodDeclarationContext ctx) {
+//        TODO: vardef and assignments and params should be used to find the variables
+        String methodName = ctx.methodName.getText();
+        int methodLine = ctx.methodName.getLine();
+        SymbolTable methodCriteria = new SymbolTable();
+        methodCriteria.setNameAndScopeNumber(methodName, methodLine);
+        boolean isDefined = false;
+        String key;
+        String value;
 
+//        - Checking Parameters
+        Token param1 = ctx.param1;
+        if (param1 != null) {
+            String parameterName = param1.getText();
+            String parameterType = ctx.typeP1.getText();
+            boolean isClassTyped = false;
+            if (parameterType.contains("string") || parameterType.contains("int")
+                    || parameterType.contains("bool")) {
+                isDefined = true;
+            }
+            if (parameterType.contains("[") || !(parameterType.contains("string")
+                    || parameterType.contains("bool") || parameterType.contains("int"))) {
+                isClassTyped = true;
+            }
+            key = "Field_" + parameterName;
+            value = "ParamField (name: " + parameterName + ") (type: " + ((isClassTyped) ?
+                    "[ classtyped= " + parameterType + ", isDefined: " + ((isDefined) ?
+                            "True])" : "False])") : parameterType + ", isDefined: " + ((isDefined) ?
+                    "True)" : "False)"));
+            methodCriteria.makeHashTable(key, value);
+            Token param2 = ctx.param2;
+            if (param2 != null) {
+                String parameterName2 = param2.getText();
+                String parameterType2 = ctx.typeP2.getText();
+
+                if (parameterType2.contains("[") || !(parameterType2.contains("string")
+                        || parameterType2.contains("bool") || parameterType2.contains("int"))) {
+                    isClassTyped = true;
+                }
+
+                if (parameterType2.contains("string") || parameterType2.contains("int")
+                        || parameterType2.contains("bool")) {
+                    isDefined = true;
+                }
+                key = "Field_" + parameterName2;
+                value = "ParamField (name: " + parameterName2 + ") (type: " + ((isClassTyped) ?
+                        "[ classtyped= " + parameterType2 + ", isDefined: " + ((isDefined) ?
+                                "True])" : "False])") : parameterType2 + ", isDefined: " + ((isDefined) ?
+                        "True)" : "False)"));
+                methodCriteria.makeHashTable(key, value);
+            }
+        }
+
+
+        for (ToorlaParser.StatementContext statement : ctx.statement()) {
+            ToorlaParser.StatementAssignmentContext assignmentContext = statement.s1.s5;
+            ToorlaParser.StatementVarDefContext varDefContext = statement.s1.s7;
+//            using assignmentContext to find the variables which declared by keyword "new"
+            if (assignmentContext != null) {
+                String variableName = assignmentContext.left.getText();
+                if (assignmentContext.right.getText().contains("new")) {
+                    String newOperatorVariablesType = assignmentContext.right.getText()
+                            .substring(3);
+                    isDefined = true;
+                    if (newOperatorVariablesType.contains("int") ||
+                            newOperatorVariablesType.contains("string") ||
+                            newOperatorVariablesType.contains("bool")) {
+                        newOperatorVariablesType = newOperatorVariablesType.
+                                replaceAll("[0-9]+", "");
+                    }
+                    key = "Field_" + variableName;
+                    value = "MethodVar (name: " + variableName + ") (type: [ localVar= " +
+                            newOperatorVariablesType + ", isDefined: " + ((isDefined) ? "True)" : "False)");
+                    methodCriteria.makeHashTable(key, value);
+
+                }
+            }
+//            using varDefContext to find out the variables
+            if (varDefContext != null) {
+                final String Range = "0123456789";
+                String variableName = varDefContext.i1.getText();
+                String variableValue = varDefContext.e1.getText();
+                String variableType = "";
+                if (Range.contains(variableValue)) {
+                    variableType = "int";
+                    isDefined = true;
+
+                } else if (variableValue.contains("\"")) {
+                    variableType = "string";
+                    isDefined = true;
+                } else if (variableValue.contains("false") || variableValue.contains("true")) {
+                    variableType = "bool";
+                    isDefined = true;
+                }
+                key = "Field_" + variableName;
+                value = "MethodVar (name: " + variableName + ") (type: [ localVar= " + variableType
+                        + ", isDefined: " + ((isDefined) ? "True)" : "False)");
+                methodCriteria.makeHashTable(key, value);
+
+            }
+
+        }
+        System.out.println(methodCriteria);
     }
 
     @Override
