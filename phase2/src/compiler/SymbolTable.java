@@ -7,7 +7,7 @@ public class SymbolTable {
     private String name = "";
     private int scopeNumber = 0;
 
-    public Hashtable<String, String> symbolTable;
+    public Map<String, String> symbolTable;
     public SymbolTable() {
         symbolTable = new Hashtable<String, String>();
     }

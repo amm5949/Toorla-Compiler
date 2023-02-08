@@ -9,17 +9,24 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 
-
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Vector;
 
 public class ProgramPrinter implements ToorlaListener {
 
     Vector<SymbolTable> tables = new Vector<>();
+    public ArrayList<String> errors = new ArrayList<>();
+    SymbolTable program = new SymbolTable();
+    SymbolTable classCriteria = new SymbolTable();
+    SymbolTable entryClassCriteria = new SymbolTable();
+    SymbolTable methodCriteria = new SymbolTable();
+    SymbolTable conditionalSymbolTable = new SymbolTable();
+    SymbolTable loopTable = new SymbolTable();
     String entryClass = "";
     @Override
     public void enterProgram(ToorlaParser.ProgramContext ctx) {
-        SymbolTable program = new SymbolTable();
+
         String className = ctx.classDeclaration().get(0).className.getText();
         String mainClass = (ctx.mainclass != null) ? ctx.mainclass.classDeclaration().className
                 .getText() : "";
@@ -52,7 +59,7 @@ public class ProgramPrinter implements ToorlaListener {
     @Override
     public void enterClassDeclaration(ToorlaParser.ClassDeclarationContext ctx) {
 
-        SymbolTable classCriteria = new SymbolTable();
+
         if (!ctx.className.getText().equals(this.entryClass)) {
             String className = ctx.className.getText();
             int line = ctx.className.getLine();
@@ -108,7 +115,7 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterEntryClassDeclaration(ToorlaParser.EntryClassDeclarationContext ctx) {
-        SymbolTable entryClassCriteria = new SymbolTable();
+
         String key;
         String value;
         int entryClassLine = ctx.classDeclaration().className.getLine();
@@ -165,7 +172,7 @@ public class ProgramPrinter implements ToorlaListener {
 //        TODO: vardef and assignments and params should be used to find the variables
         String methodName = ctx.methodName.getText();
         int methodLine = ctx.methodName.getLine();
-        SymbolTable methodCriteria = new SymbolTable();
+
         methodCriteria.setNameAndScopeNumber(methodName, methodLine);
         boolean isDefined = false;
         String key;
@@ -285,6 +292,8 @@ public class ProgramPrinter implements ToorlaListener {
     public void enterClosedConditional(ToorlaParser.ClosedConditionalContext ctx) {
         String scopeName = "nested";
         int scopeNumber = 0;
+        String key= "";
+        String value = "";
         ToorlaParser.ClosedStatementContext closedStatementContext = ctx.ifStat;
         Iterator<ParseTree> treeIterator = ctx.children.iterator();
         while(treeIterator.hasNext()) {
@@ -311,7 +320,7 @@ public class ProgramPrinter implements ToorlaListener {
                     continue;
                 }
             }
-            SymbolTable conditionalSymbolTable = new SymbolTable();
+
             conditionalSymbolTable.setNameAndScopeNumber(scopeName, scopeNumber);
             scopeName = "";
             scopeNumber = 0;
@@ -343,14 +352,18 @@ public class ProgramPrinter implements ToorlaListener {
                         isDefined = true;
                     }
 
-                    String key = "Field_" + variableName;
-                    String value = "MethodVar (name: " + variableName + ") (type: [ localVar= " + variableType + ", isDefined: " + ((isDefined) ? "True)" : "False)");
+                    key = "Field_" + variableName;
+                    value = "MethodVar (name: " + variableName + ") (type: [ localVar= " + variableType + ", isDefined: " + ((isDefined) ? "True)" : "False)");
                     conditionalSymbolTable.makeHashTable(key, value);
-                    System.out.println(conditionalSymbolTable);
 
                 }
 
+
+                key = "";
+                value = "";
+
             }
+            System.out.println(conditionalSymbolTable);
         }
 
 
@@ -458,7 +471,7 @@ public class ProgramPrinter implements ToorlaListener {
         boolean isDefined = false;
         String scopeName = ctx.children.get(0).getText();
         int scopeNumber = ctx.getStart().getLine();
-        SymbolTable loopTable = new SymbolTable();
+
         loopTable.setNameAndScopeNumber(scopeName, scopeNumber);
         boolean isClassTyped = false;
         String variableName = (ctx.s.s7 != null) ? ctx.s.s7.i1.getText() : "";
