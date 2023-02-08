@@ -28,6 +28,10 @@ public class SymbolTable {
         return itemStr;
     }
 
+    public int getScopeNumber() {
+        return scopeNumber;
+    }
+
     public String toString() {
         return "------------- " + name + " : " + scopeNumber + " -------------\n" +
                 printItems() +
