@@ -5,7 +5,9 @@ import gen.ToorlaParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+
 
 
 import java.util.Iterator;
@@ -272,39 +274,6 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterClosedStatement(ToorlaParser.ClosedStatementContext ctx) {
-//        System.out.println(ctx.);
-//        System.out.println((ctx.s1 != null) ? ctx.s1.getText() : "Not Found!");
-//        System.out.println((ctx.s1 != null) ? ctx.s1.statement().get(0).getText() : "Not Found 1");
-//        ToorlaParser.StatementBlockContext blockContext = ctx.s1;
-//        if (blockContext != null) {
-//            Iterator<ToorlaParser.StatementContext> statementContextIterator = blockContext.statement()
-//                    .iterator();
-//            while (statementContextIterator.hasNext()) {
-//                ToorlaParser.StatementContext statementContext = statementContextIterator.next();
-////                System.out.println((statementContext.s1 != null) ? ((statementContext.s1.s7 !
-// = null) ?  statementContext.s1.s7.getText() : "Not Found 3") : "Not Found 2");
-//                System.out.println((statementContext.s1 != null) ? statementContext.s1.get
-//                Text() : "Not Found2");
-//            }
-//
-//        }
-//        System.out.println((ctx.s1.s.s1.s7 != null) ? ctx.s1.s.s1.s7.getText(): "Not Found!");
-//        if (ctx.s1 != null) {
-//            if (ctx.s1.s != null) {
-//                if (ctx.s1.s.s1 != null) {
-//                    if (ctx.s1.s.s1.s7 != null) {
-//                        System.out.println(ctx.s1.s.s1.s7.getText());
-//                    }
-//                }
-//            }
-//        }
-//        else {
-//            System.out.println("Not Found!");
-//        }
-//        System.out.println((ctx.s7 != null) ? ctx.s7.parent.parent.parent. : "Not Found!");
-//        System.out.println((ctx.s7 != null) ? ctx.s7.getText() : "Not Found!");.
-
-
     }
 
     @Override
@@ -314,13 +283,83 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void enterClosedConditional(ToorlaParser.ClosedConditionalContext ctx) {
-        String scopeName = "if";
-//        int scopeNumber = ctx.ifStat.s1.statement().iterator().next().s1.s7.parent.parent
-//        .parent.getChildCount();
-//        System.out.println(ctx.parent.parent.parent.getChild(2));
-//        SymbolTable symbolTable = tables.lastElement().getScopeNumber()
-//        System.out.println("last element: " + tables.lastElement());
-//        System.out.println(ctx.ifStat.s1.statement().iterator().next().s1.s7.getText());
+        String scopeName = "nested";
+        int scopeNumber = 0;
+        ToorlaParser.ClosedStatementContext closedStatementContext = ctx.ifStat;
+        Iterator<ParseTree> treeIterator = ctx.children.iterator();
+        while(treeIterator.hasNext()) {
+            ParseTree parseTree = treeIterator.next();
+            if (parseTree.getText().equals("if")) {
+                scopeName = "if";
+                scopeNumber = ctx.getStart().getLine();
+                closedStatementContext = ctx.ifStat;
+
+            }
+            else {
+                if (parseTree.getText().equals("elif")) {
+                    scopeName = "nested";
+                    scopeNumber = ctx.getStart().getLine();
+                    closedStatementContext = ctx.elifStat;
+
+                } else if (parseTree.getText().equals("else")) {
+                    scopeName = "nested";
+                    scopeNumber = ctx.getStart().getLine();
+                    closedStatementContext = ctx.elseStmt;
+
+                }
+                else {
+                    continue;
+                }
+            }
+            SymbolTable conditionalSymbolTable = new SymbolTable();
+            conditionalSymbolTable.setNameAndScopeNumber(scopeName, scopeNumber);
+            scopeName = "";
+            scopeNumber = 0;
+            Iterator<ToorlaParser.StatementContext> iterator;
+            if (closedStatementContext.s1 != null) {
+                iterator = closedStatementContext.s1.statement().iterator();
+            } else{
+                break;
+            }
+
+            final String RANGE = "0123456789";
+            while (iterator.hasNext()){
+                boolean isDefined = false;
+                ToorlaParser.StatementContext statementContext = iterator.next();
+                if(statementContext.s1 != null && statementContext.s1.s7 != null) {
+                    String variableName = statementContext.s1.s7.i1.getText();
+                    String variableValue = statementContext.s1.s7.e1.getText();
+                    String variableType = "";
+                    if(RANGE.contains(variableValue)) {
+                        variableType = "int";
+                        isDefined = true;
+                    }
+                    else if (variableValue.contains("\"")){
+                        variableType = "string";
+                        isDefined = true;
+                    }
+                    else if(variableValue.equals("false") || variableValue.equals("true")) {
+                        variableType = "bool";
+                        isDefined = true;
+                    }
+
+                    String key = "Field_" + variableName;
+                    String value = "MethodVar (name: " + variableName + ") (type: [ localVar= " + variableType + ", isDefined: " + ((isDefined) ? "True)" : "False)");
+                    conditionalSymbolTable.makeHashTable(key, value);
+                    System.out.println(conditionalSymbolTable);
+
+                }
+
+            }
+        }
+
+
+
+
+//        System.out.println(ctx.elseStmt.s7);
+//        System.out.println(closedStatementContext.s1.getText());
+
+
     }
 
     @Override
@@ -364,6 +403,7 @@ public class ProgramPrinter implements ToorlaListener {
     @Override
     public void enterStatementVarDef(ToorlaParser.StatementVarDefContext ctx) {
 //        System.out.println(ctx.parent.parent.parent.getChild(0).getText());
+
 
     }
 
