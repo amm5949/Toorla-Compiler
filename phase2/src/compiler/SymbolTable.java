@@ -20,6 +20,9 @@ public class SymbolTable {
         this.symbolTable.put(key, value);
     }
 
+    public String getName() {
+        return this.name;
+    }
     public String printItems() {
         String itemStr = "";
         for (Map.Entry<String, String> entry: this.symbolTable.entrySet()) {

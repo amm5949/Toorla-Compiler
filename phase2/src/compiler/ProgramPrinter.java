@@ -54,6 +54,22 @@ public class ProgramPrinter implements ToorlaListener {
     @Override
     public void exitProgram(ToorlaParser.ProgramContext ctx) {
 //        System.out.println("goodbye Program }");
+//        System.out.println(ctx.getText());
+//        System.out.println(ctx.c1.ID().get(0).toString());
+        int size = ctx.c1.ID().size();
+        for (int i = 0; i < size; i++) {
+//            System.out.println(ctx.c1.ID().get(i).toString());
+            int line = ctx.c1.getStart().getLine();
+            int column = ctx.c1.className.getTokenIndex();
+//            System.out.println(column);
+            String key = ctx.c1.ID().get(i).toString();
+            if (program.symbolTable.containsKey(key)) {
+                System.out.println("Error101: in line [" + line +":" + column +"] , class [" + key +"] has been defined already");
+            }
+        }
+//        for (int i = 0; i< program.symbolTable.size(); i++) {
+//            System.out.println(program.symbolTable.containsKey());
+//        }
     }
 
     @Override
@@ -110,7 +126,7 @@ public class ProgramPrinter implements ToorlaListener {
 
     @Override
     public void exitClassDeclaration(ToorlaParser.ClassDeclarationContext ctx) {
-
+//        System.out.println(ctx.ID().get(0));
     }
 
     @Override
